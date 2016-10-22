@@ -46,6 +46,10 @@ Before contributing a change, please run the following checks:
 # once.
 flake8 --install-hook=git
 
+# The above will automatically run the linter whenever you commit, but it's a
+# good habit to just run it across the whole project occasionally.
+flake8
+
 # There are no automated tests yet. Once they are set up, instructions will be
 # added on how to run them.
 ```
