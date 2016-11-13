@@ -34,7 +34,7 @@ Currently, all this will do is list your conversations, most recently modified f
 Limitations
 -----------
 
-This project builds heavily off the excellent [hangups](https://github.com/tdryer/hangups) library. As the README for that libary explains, Google Hangouts uses a proprietary protocol, so any communication with Google Hangouts has been reversed engineered.
+This project builds heavily off the excellent [hangups](https://github.com/tdryer/hangups) library. As the README for that library explains, Google Hangouts uses a proprietary protocol, so any communication with Google Hangouts has been reversed engineered.
 
 Contributing
 ------------
