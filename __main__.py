@@ -60,14 +60,14 @@ def conversation_name(conv):
     return ', '.join(u.full_name for u in users)
 
 
-def send_message_callback(event, client, conversation):
-    def send_message():
+def receive_message_callback(message_event, client, conversation):
+    def receive_message():
         """
         For a chat message event, send a response reflecting the same message.
         """
 
         segments = hangups.ChatMessageSegment.from_str(
-            '[FROM HANGBOT] {}'.format(event.text))
+            '[FROM HANGBOT] {}'.format(message_event.text))
         conversation.send_message(segments)
         (asyncio.async(conversation.send_message(segments))
             .add_done_callback(on_message_sent))
@@ -77,12 +77,10 @@ def send_message_callback(event, client, conversation):
 
         try:
             future.result()
-
-            print()
         except hangups.NetworkError:
             print('Failed to send message')
 
-    return send_message
+    return receive_message
 
 
 def on_event_handler(loop, client, conversation):
@@ -93,15 +91,13 @@ def on_event_handler(loop, client, conversation):
             loop.call_soon(show_event(event))
             if not conversation.get_user(event.user_id).is_self:
                 loop.call_soon(
-                    send_message_callback(
+                    receive_message_callback(
                         event,
                         client,
                         conversation))
 
     def show_event(event):
-        def print_event():
-            print(event.text)
-        return print_event
+        return lambda: print(event.text)
 
     return on_event
 
