@@ -60,25 +60,16 @@ def conversation_name(conv):
     return ', '.join(u.full_name for u in users)
 
 
-def prompt_and_send_callback(loop, client, conversations):
-    def prompt_and_send():
+def receive_message_callback(message_event, client, conversation):
+    def receive_message():
         """
-        Prompt for a conversation and a message, then send the message to that
-        conversation.
+        For a chat message event, send a response reflecting the same message.
         """
-
-        conv_prompt = \
-            'Which conversation? [0-{}]'.format(len(conversations) - 1)
-        print(conv_prompt, end=' ')
-        conv_index = int(input())
-
-        print('Message:', end=' ')
-        message = input()
 
         segments = hangups.ChatMessageSegment.from_str(
-            '[FROM HANGBOT] {}'.format(message))
-        conversations[conv_index].send_message(segments)
-        (asyncio.async(conversations[conv_index].send_message(segments))
+            '[FROM HANGBOT] {}'.format(message_event.text))
+        conversation.send_message(segments)
+        (asyncio.async(conversation.send_message(segments))
             .add_done_callback(on_message_sent))
 
     def on_message_sent(future):
@@ -86,13 +77,29 @@ def prompt_and_send_callback(loop, client, conversations):
 
         try:
             future.result()
-
-            print()
-            loop.call_soon(prompt_and_send)
         except hangups.NetworkError:
             print('Failed to send message')
 
-    return prompt_and_send
+    return receive_message
+
+
+def on_event_handler(loop, client, conversation):
+    def on_event(event):
+        """Handles the last chat message from the client."""
+
+        if isinstance(event, hangups.ChatMessageEvent):
+            loop.call_soon(show_event(event))
+            if not conversation.get_user(event.user_id).is_self:
+                loop.call_soon(
+                    receive_message_callback(
+                        event,
+                        client,
+                        conversation))
+
+    def show_event(event):
+        return lambda: print(event.text)
+
+    return on_event
 
 
 def on_connect_handler(loop, client):
@@ -108,10 +115,9 @@ def on_connect_handler(loop, client):
 
         print('Conversations:')
         for i, c in enumerate(convs):
+            c.on_event.add_observer(on_event_handler(loop, client, c))
             print('  {:>3}. {}'.format(i, conversation_name(c)))
         print()
-
-        loop.call_soon(prompt_and_send_callback(loop, client, convs))
 
     return on_connect
 
