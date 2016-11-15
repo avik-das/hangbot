@@ -114,16 +114,13 @@ def on_event_handler(loop, client, conversation):
         """Handles the last chat message from the client."""
 
         if isinstance(event, hangups.ChatMessageEvent):
-            loop.call_soon(show_event(event))
             if not conversation.get_user(event.user_id).is_self:
+                logger.info('Processing message: %s', event.text)
                 loop.call_soon(
                     receive_message_callback(
                         event,
                         client,
                         conversation))
-
-    def show_event(event):
-        return lambda: logger.info('Received message: %s', event.text)
 
     return on_event
 
