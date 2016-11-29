@@ -1,8 +1,34 @@
 import asyncio
+import logging
+import logging.handlers
 import os
 import sys
 
 import hangups
+
+
+logger = logging.getLogger('hangbot')
+logger.setLevel(logging.DEBUG)  # this could depend on the environment
+
+# Terse output, for easy viewing on the console while developing.
+stdout_handler = logging.StreamHandler()
+stdout_handler.setLevel(logging.DEBUG)
+stdout_handler.setFormatter(
+    logging.Formatter(
+        '%(asctime)s [%(levelname)s] %(message)s',
+        '%H:%M:%S'))
+logger.addHandler(stdout_handler)
+
+# Verbose output, for debugging after the fact.
+file_handler = logging.handlers.RotatingFileHandler(
+    'hangbot.log',
+    maxBytes=1024 * 1024,
+    backupCount=10,
+    encoding='utf-8')
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(
+    logging.Formatter('%(asctime)s - %(name)s - [%(levelname)s] %(message)s'))
+logger.addHandler(file_handler)
 
 
 def get_auth_env():
@@ -77,8 +103,8 @@ def receive_message_callback(message_event, client, conversation):
 
         try:
             future.result()
-        except hangups.NetworkError:
-            print('Failed to send message')
+        except hangups.NetworkError as e:
+            logger.exception('Failed to send message: %s', e)
 
     return receive_message
 
@@ -88,16 +114,13 @@ def on_event_handler(loop, client, conversation):
         """Handles the last chat message from the client."""
 
         if isinstance(event, hangups.ChatMessageEvent):
-            loop.call_soon(show_event(event))
             if not conversation.get_user(event.user_id).is_self:
+                logger.info('Processing message: %s', event.text)
                 loop.call_soon(
                     receive_message_callback(
                         event,
                         client,
                         conversation))
-
-    def show_event(event):
-        return lambda: print(event.text)
 
     return on_event
 
@@ -113,11 +136,11 @@ def on_connect_handler(loop, client):
         convs = list(reversed(
             sorted(convs.get_all(), key=lambda c: c.last_modified)))
 
-        print('Conversations:')
-        for i, c in enumerate(convs):
-            c.on_event.add_observer(on_event_handler(loop, client, c))
-            print('  {:>3}. {}'.format(i, conversation_name(c)))
-        print()
+        for conv in convs:
+            conv.on_event.add_observer(on_event_handler(loop, client, conv))
+            logger.info(
+                'Listening to conversation: %s',
+                conversation_name(conv))
 
     return on_connect
 
