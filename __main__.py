@@ -93,7 +93,7 @@ def conversation_name(conv):
     return ', '.join(u.full_name for u in users)
 
 
-async def receive_message(message_event, client, conversation):
+async def receive_message(client, conversation, message_event):
     """
     For a chat message event, go through the enabled scripts until one of
     them processes a message.
@@ -101,13 +101,17 @@ async def receive_message(message_event, client, conversation):
 
     try:
         for script in ENABLED_SCRIPTS:
-            if await script.process(client, conversation, message_event):
+            processed = await script.process_message(
+                client,
+                conversation,
+                message_event)
+            if processed:
                 break
     except Exception as e:
         logger.exception('Failed to send process message: %s', e)
 
 
-def on_event_handler(loop, client, conversation):
+def on_event_handler(client, conversation):
     async def on_event(event):
         """Handles the last chat message from the client."""
 
@@ -116,14 +120,14 @@ def on_event_handler(loop, client, conversation):
                 logger.info('Processing message: %s', event.text)
                 asyncio.ensure_future(
                     receive_message(
-                        event,
                         client,
-                        conversation))
+                        conversation,
+                        event))
 
     return on_event
 
 
-def on_connect_handler(loop, client):
+def on_connect_handler(client):
     async def on_connect():
         """Handle connecting for the first time."""
 
@@ -133,7 +137,7 @@ def on_connect_handler(loop, client):
             sorted(convs.get_all(), key=lambda c: c.last_modified)))
 
         for conv in convs:
-            conv.on_event.add_observer(on_event_handler(loop, client, conv))
+            conv.on_event.add_observer(on_event_handler(client, conv))
             logger.info(
                 'Listening to conversation: %s',
                 conversation_name(conv))
@@ -151,7 +155,7 @@ if __name__ == '__main__':
         loop = asyncio.get_event_loop()
 
         client = hangups.Client(cookies)
-        client.on_connect.add_observer(on_connect_handler(loop, client))
+        client.on_connect.add_observer(on_connect_handler(client))
 
         loop.run_until_complete(client.connect())
     finally:
