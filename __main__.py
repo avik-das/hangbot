@@ -6,6 +6,7 @@ import sys
 
 import hangups
 
+import scripts.giphy
 import scripts.swanson
 
 
@@ -34,6 +35,7 @@ logger.addHandler(file_handler)
 
 
 ENABLED_SCRIPTS = [
+    scripts.giphy,
     scripts.swanson,
 ]
 
