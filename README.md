@@ -24,12 +24,15 @@ pip install -r requirements.txt
 export HANGBOT_EMAIL='...'
 export HANGBOT_PASSWORD='...'
 
+# Make sure you have some hangouts conversations with the above user as a
+# member, as those are the conversations the bot will listen to.
+
 python .
 
 # Press ^C to exit
 ```
 
-Currently, all this will do is list your conversations, most recently modified first.
+Now you can send commands to the bot. See the `scripts` directory for available commands.
 
 Limitations
 -----------
@@ -52,4 +55,27 @@ flake8
 
 # There are no automated tests yet. Once they are set up, instructions will be
 # added on how to run them.
+```
+
+Running as a Daemon
+-------------------
+
+In production, we want to run the bot as a daemon, as well as automatically restart it if it crashes. This project uses [the `forever` tool](https://github.com/foreverjs/forever) to achieve this. To run the bot in production:
+
+```sh
+# Make sure you have node.js installed. Any version that forever.js supports is
+# sufficient.
+
+npm install
+
+# Start the daemon
+npm start
+
+# Now you can directly use "forever" to monitor and interact with the running
+# process. Because the tool isn't installed globally, you'll have to point to
+# the correct executable. Examples include:
+./node_modules/.bin/forever          # see all the available options
+./node_modules/.bin/forever list     # see all running daemons
+./node_modules/.bin/forever logs .   # see the latest STDOUT output for the bot
+./node_modules/.bin/forever stop .   # stop the bot
 ```
