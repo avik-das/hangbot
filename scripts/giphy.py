@@ -22,7 +22,7 @@ COMMAND = '/giphy'
 
 
 async def process_message(client, conversation, message_event):
-    if message_event.text.startswith(COMMAND):
+    if message_event.text and message_event.text.startswith(COMMAND):
 
         params = {
             'api_key': API_KEY,
