@@ -1,18 +1,16 @@
 """
 Respond to:
 
-    /giphy "phrase"
+    /giphy [tag]
 
-with a random image from giphy based on that phrase.
+with a random image from Giphy (optionally limited by tag)
 """
 
 import asyncio
 import functools
 import hangups
 import logging
-import re
 import requests
-import urllib
 
 
 logger = logging.getLogger('hangbot.scripts.giphy')
@@ -20,21 +18,20 @@ logger = logging.getLogger('hangbot.scripts.giphy')
 
 API_KEY = 'dc6zaTOxFJmzC'  # Use the public API key for now
 API_URL = 'http://api.giphy.com/v1/gifs/random'
-COMMAND = '/giphy '
-MESSAGE_REGEX = re.compile(r'^{}'.format(COMMAND), re.IGNORECASE)
+COMMAND = '/giphy'
 
 
 async def process_message(client, conversation, message_event):
-    if MESSAGE_REGEX.match(message_event.text):
+    if message_event.text.startswith(COMMAND):
 
         params = {
             'api_key': API_KEY,
-            'tag': message_event.text[len(COMMAND):]
+            'tag': message_event.text[len(COMMAND):].strip()
         }
-        url = '{}?{}'.format(API_URL, urllib.parse.urlencode(params))
 
         loop = asyncio.get_event_loop()
-        response = await loop.run_in_executor(None, requests.get, url)
+        response = await loop.run_in_executor(
+            None, functools.partial(requests.get, API_URL, params=params))
         response_json = response.json()
 
         image_name = '{}.gif'.format(response_json['data']['id'])
