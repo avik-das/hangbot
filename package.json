@@ -1,0 +1,30 @@
+{
+  "name": "hangbot",
+  "version": "0.5.0",
+  "description": "A bot for Google Hangouts, developed for personal needs.",
+  "main": "index.js",
+  "scripts": {
+    "start": "forever start -c python ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/avik-das/hangbot.git"
+  },
+  "keywords": [
+    "hangouts",
+    "bot",
+    "chat"
+  ],
+  "contributors": [
+    "Ty Terdan <tnterdan@gmail.com>",
+    "Avik Das <avik.das@berkeley.edu>"
+  ],
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/avik-das/hangbot/issues"
+  },
+  "homepage": "https://github.com/avik-das/hangbot",
+  "dependencies": {
+    "forever": "0.15.3"
+  }
+}
